@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
   Param,
   ParseUUIDPipe,
@@ -34,14 +33,8 @@ export class ProjectsController {
   @ApiResponse({
     type: ProjectListItemDTO,
   })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    const project = await this.projectsService.findById(id)
-
-    if (!project) {
-      throw new HttpException('Project not found', HttpStatus.NOT_FOUND)
-    }
-
-    return project
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.projectsService.findById(id)
   }
 
   @Post()
@@ -56,25 +49,13 @@ export class ProjectsController {
   @ApiResponse({
     type: ProjectListItemDTO,
   })
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() data: ProjectRequestDTO) {
-    const project = await this.projectsService.findById(id)
-
-    if (!project) {
-      throw new HttpException('Project not found', HttpStatus.NOT_FOUND)
-    }
-
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() data: ProjectRequestDTO) {
     return this.projectsService.update(id, data)
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    const project = await this.projectsService.findById(id)
-
-    if (!project) {
-      throw new HttpException('Project not found', HttpStatus.NOT_FOUND)
-    }
-
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.projectsService.remove(id)
   }
 }
