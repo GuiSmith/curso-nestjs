@@ -1,11 +1,12 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
+import { TaskRequestDTO, TaskListItemDTO} from './task.dto';
 
 @Injectable()
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllByProject(projectId: string) {
+  async findAllByProject(projectId: string): Promise<TaskListItemDTO[]> {
     const tasks = await this.prisma.task.findMany({ where: { projectId } });
 
     if(!tasks){
@@ -15,7 +16,7 @@ export class TasksService {
     return tasks;
   }
 
-  async findById(projectId: string, taskId: string) {
+  async findById(projectId: string, taskId: string): Promise<TaskListItemDTO> {
     const task = await this.prisma.task.findFirst({
       where: {
         projectId,
@@ -30,7 +31,7 @@ export class TasksService {
     return task
   }
 
-  async create(projectId: string, data: any) {
+  async create(projectId: string, data: TaskRequestDTO): Promise<TaskListItemDTO> {
     const task = await this.prisma.task.create({
       data: {
         ...data,
@@ -47,7 +48,7 @@ export class TasksService {
     return task
   }
 
-  async update(projectId: string, taskId: string, data: any) {
+  async update(projectId: string, taskId: string, data: TaskRequestDTO): Promise<TaskListItemDTO> {
     const existingTask = await this.prisma.task.findFirst({
       where: {
         id: taskId,
@@ -74,7 +75,7 @@ export class TasksService {
     return updatedTask;
   }
 
-  async delete(projectId: string, taskId: string) {
+  async delete(projectId: string, taskId: string): Promise<TaskListItemDTO> {
     const existingTask = await this.prisma.task.findFirst({
       where: {
         id: taskId,
