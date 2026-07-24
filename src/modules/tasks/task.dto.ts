@@ -60,8 +60,8 @@ export class TaskListItemDTO {
   @ApiProperty() description: string | null
   @ApiProperty({ enum: TaskStatus }) status: TaskStatus
   @ApiProperty({ enum: TaskPriority }) priority: TaskPriority
-  @ApiProperty({ format: 'date-time', required: false }) dueDate: Date | null
+  @ApiProperty({ format: 'date-time', required: false, type: Date, nullable: true }) dueDate: Date | null
   @ApiProperty() projectId: string
   @ApiProperty({ format: 'date-time' }) createdAt: Date
-  @ApiProperty({ format: 'date-time' }) updateAt: Date
+  @ApiProperty({ format: 'date-time' }) updatedAt: Date
 }

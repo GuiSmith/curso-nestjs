@@ -32,7 +32,12 @@ export class ProjectsService {
   }
 
   async create(data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
-    const project = await this.prisma.project.create({ data })
+    const project = await this.prisma.project.create({
+      data: {
+        ...data,
+        createdById: 'd8a0adab-4e91-4fd5-a974-0eb58c92129c',
+      }
+    })
 
     if (!project) {
       throw new InternalServerErrorException(

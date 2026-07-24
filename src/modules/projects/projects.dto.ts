@@ -18,10 +18,10 @@ export class ProjectRequestDTO {
 
 export class ProjectListItemDTO {
   @ApiProperty() id: string
-  @ApiProperty() name: string
-  @ApiProperty() description: string | null
-  @ApiProperty({ format: 'date-time' }) createdAt: Date
-  @ApiProperty({ format: 'date-time' }) updateAt: Date
+  @ApiProperty({ description: "Project's name"}) name: string
+  @ApiProperty({ description: "Project's description", type: String, nullable: true }) description: string | null
+  @ApiProperty({ description: "Project's creation date", format: 'date-time' }) createdAt: Date
+  @ApiProperty({ description: "Project's last update date", format: 'date-time' }) updatedAt: Date
 }
 
 export class ProjectTaskDTO extends ProjectListItemDTO {
