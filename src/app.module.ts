@@ -7,9 +7,10 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { UsersModule } from './modules/users/users.module';
 import { CollaboratorsModule } from './modules/collaborators/collaborators.module';
 import { CommentsModule } from './modules/comments/comments.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
-  imports: [ProjectsModule, TasksModule, UsersModule, CollaboratorsModule, CommentsModule],
+  imports: [ProjectsModule, TasksModule, UsersModule, CollaboratorsModule, CommentsModule, AuthModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
