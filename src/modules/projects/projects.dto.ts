@@ -10,10 +10,10 @@ export class ProjectRequestDTO {
   @MaxLength(50)
   name: string
 
-  @ApiProperty({ description: 'Project description', required: false })
+  @ApiProperty({ description: 'Project description', required: false, nullable: true })
   @IsString()
   @MaxLength(255)
-  description: string
+  description?: string | null
 }
 
 export class ProjectListItemDTO {
