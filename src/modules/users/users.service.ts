@@ -49,9 +49,21 @@ export class UsersService {
     }
 
     async create(data: UserRequestDTO): Promise<UserListFullItemDTO> {
-        const user = await this.prisma.user.create({
-            data,
-            include: { createdProjects: true }
+
+        const user = await this.prisma.$transaction(async tx => {
+            const existingEmail = await tx.user.findFirst({ where: { email: data.email }});
+
+            if(existingEmail){
+                throw new ConflictException("This email is already being used by another user");
+            }
+            
+            const createdUser = await this.prisma.user.create({
+                data,
+                include: { createdProjects: true }
+            });
+
+            return createdUser;
+
         });
 
         const { password: _, ...safeUser } = user;
