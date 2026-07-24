@@ -57,7 +57,7 @@ export class UsersService {
                 throw new ConflictException("This email is already being used by another user");
             }
             
-            const createdUser = await this.prisma.user.create({
+            const createdUser = await tx.user.create({
                 data,
                 include: { createdProjects: true }
             });
