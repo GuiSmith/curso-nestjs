@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
+import { UserListFullItemDTO, UserRequestDTO } from './users.dto';
 import { ApiResponse } from '@nestjs/swagger';
 
 @Controller({
