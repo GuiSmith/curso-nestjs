@@ -60,12 +60,35 @@ export class UsersService {
     }
 
     async update(id: string, data: UserRequestDTO): Promise<UserListFullItemDTO> {
-        await this.findById(id);
 
-        const user = await this.prisma.user.update({
-            where: { id },
-            data,
-            include: { createdProjects: true },
+        const user = await this.prisma.$transaction(async tx => {
+            const existingUser = await tx.user.findFirst({ where: { id } });
+
+            if(!existingUser){
+                throw new NotFoundException('User not found');
+            }
+
+            if(existingUser.email !== data.email){
+                const existingEmail = await tx.user.findFirst({
+                    where: {
+                        email: data.email,
+                        not: { id }
+                    }
+                });
+
+                if(existingEmail){
+                    throw new ConflictException("This email is already being used by another user");
+                }
+            }
+
+            const createdUser = await tx.user.update({
+                where: { id },
+                data,
+                include: { createdProjects: true },
+            });
+
+            return createdUser;
+            
         });
 
         const { password: _, ...safeUser } = user;
