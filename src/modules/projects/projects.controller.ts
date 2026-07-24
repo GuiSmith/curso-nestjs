@@ -52,10 +52,4 @@ export class ProjectsController {
   update(@Param('id', ParseUUIDPipe) id: string, @Body() data: ProjectRequestDTO) {
     return this.projectsService.update(id, data)
   }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.projectsService.remove(id)
-  }
 }

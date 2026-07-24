@@ -75,22 +75,4 @@ export class ProjectsService {
 
     return updatedProject
   }
-
-  async remove(id: string): Promise<ProjectListItemDTO> {
-    const existingProject = await this.prisma.project.findFirst({ where: { id } })
-
-    if (!existingProject) {
-      throw new NotFoundException('Projeto não encontrado')
-    }
-
-    const deletedProject = await this.prisma.project.delete({ where: { id } })
-
-    if (!deletedProject) {
-      throw new InternalServerErrorException(
-        'Projeto não excluído. Contate o suporte',
-      )
-    }
-
-    return deletedProject
-  }
 }
