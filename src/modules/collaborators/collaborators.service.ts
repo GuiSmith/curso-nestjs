@@ -19,9 +19,9 @@ export class CollaboratorsService {
     })
   }
 
-  async findById(id: string): Promise<CollaboratorListItemDTO> {
+  async findById(projectId: string, id: string): Promise<CollaboratorListItemDTO> {
     const collaborator = await this.prisma.projectCollaborator.findUnique({
-      where: { id },
+      where: { id, projectId },
       include: { user: true },
     })
 
@@ -64,11 +64,11 @@ export class CollaboratorsService {
     return { ...collaboratorData, role, user: safeUser }
   }
 
-  async update(collaboratorId: string, data: CollaboratorUpdateDTO): Promise<CollaboratorListItemDTO> {
-    await this.findById(collaboratorId)
+  async update(projectId: string, collaboratorId: string, data: CollaboratorUpdateDTO): Promise<CollaboratorListItemDTO> {
+    await this.findById(projectId, collaboratorId)
 
     const collaborator = await this.prisma.projectCollaborator.update({
-      where: { id: collaboratorId },
+      where: { id: collaboratorId, projectId },
       data: { ROLE: data.role },
       include: { user: true },
     })

@@ -33,16 +33,23 @@ export class CollaboratorsController {
   @ApiResponse({
     type: CollaboratorListItemDTO,
   })
-  findOne(@Param('collaboratorId', ParseUUIDPipe) collaboratorId: string) {
-    return this.collaboratorsService.findById(collaboratorId)
+  findOne(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('collaboratorId', ParseUUIDPipe) collaboratorId: string
+  ) {
+    return this.collaboratorsService.findById(projectId, collaboratorId)
   }
 
   @Put(':collaboratorId')
   @ApiResponse({
     type: CollaboratorListItemDTO,
   })
-  update(@Param('collaboratorId', ParseUUIDPipe) collaboratorId: string, @Body() data: CollaboratorUpdateDTO) {
-    return this.collaboratorsService.update(collaboratorId, data)
+  update(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('collaboratorId', ParseUUIDPipe) collaboratorId: string,
+    @Body() data: CollaboratorUpdateDTO
+  ) {
+    return this.collaboratorsService.update(projectId, collaboratorId, data)
   }
 
   @Delete(':collaboratorId')
