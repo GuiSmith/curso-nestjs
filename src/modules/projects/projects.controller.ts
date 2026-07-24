@@ -11,7 +11,7 @@ import {
   Put,
 } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
-import { ProjectListItemDTO, ProjectRequestDTO } from './projects.dto'
+import { ProjectListItemDTO, ProjectRequestDTO, ProjectTaskDTO } from './projects.dto'
 import { ProjectsService } from './projects.service'
 
 @Controller({
@@ -31,7 +31,7 @@ export class ProjectsController {
 
   @Get(':id')
   @ApiResponse({
-    type: ProjectListItemDTO,
+    type: ProjectTaskDTO,
   })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.projectsService.findById(id)
