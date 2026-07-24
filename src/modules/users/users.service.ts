@@ -1,13 +1,13 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { UserListItemDTO, UserRequestDTO } from './users.dto';
+import { UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
 
 @Injectable()
 export class UsersService {
 
     constructor(private readonly prisma: PrismaService) {}
 
-    async findById(id: string): Promise<UserListItemDTO> {
+    async findById(id: string): Promise<UserListFullItemDTO> {
         const user = await this.prisma.user.findFirst({
             where: { id },
             include: { createdProjects: true }
@@ -23,7 +23,7 @@ export class UsersService {
         return safeUser;
     }
 
-    async findByEmail(email: string): Promise<UserListItemDTO> {
+    async findByEmail(email: string): Promise<UserListFullItemDTO> {
         const user = await this.prisma.user.findFirst({
             where: { email },
             include: { createdProjects: true }
@@ -38,7 +38,7 @@ export class UsersService {
         return safeUser;
     }
 
-    async findAll(): Promise<UserListItemDTO[]> {
+    async findAll(): Promise<UserListFullItemDTO[]> {
         const users = await this.prisma.user.findMany({
             include: { createdProjects: true }
         });
@@ -48,7 +48,7 @@ export class UsersService {
         return safeUsers;
     }
 
-    async create(data: UserRequestDTO): Promise<UserListItemDTO> {
+    async create(data: UserRequestDTO): Promise<UserListFullItemDTO> {
         const user = await this.prisma.user.create({
             data,
             include: { createdProjects: true }
@@ -59,7 +59,7 @@ export class UsersService {
         return safeUser;
     }
 
-    async update(id: string, data: UserRequestDTO): Promise<UserListItemDTO> {
+    async update(id: string, data: UserRequestDTO): Promise<UserListFullItemDTO> {
         await this.findById(id);
 
         const user = await this.prisma.user.update({
@@ -73,7 +73,7 @@ export class UsersService {
         return safeUser;
     }
 
-    async remove(id: string): Promise<UserListItemDTO> {
+    async remove(id: string): Promise<UserListFullItemDTO> {
         await this.findById(id);
 
         const [projects, tasks, comments] = await Promise.all([

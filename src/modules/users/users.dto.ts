@@ -47,7 +47,9 @@ export class UserListItemDTO {
 
     @ApiProperty({ description: "User's last update date", format: 'date-time' })
     updatedAt: Date
+}
 
+export class UserListFullItemDTO extends UserListItemDTO {
     @ApiProperty({ description: "User's projects", type: [ProjectListItemDTO] })
     createdProjects: ProjectListItemDTO[]
 }

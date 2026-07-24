@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UserListItemDTO, UserRequestDTO } from './users.dto';
+import { UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
 import { ApiResponse } from '@nestjs/swagger';
 
 @Controller({
@@ -13,7 +13,7 @@ export class UsersController {
 
     @Get()
     @ApiResponse({
-        type: [UserListItemDTO]
+        type: [UserListFullItemDTO]
     })
     findAll() {
         return this.userService.findAll();
@@ -21,7 +21,7 @@ export class UsersController {
 
     @Get(':userId')
     @ApiResponse({
-        type: UserListItemDTO
+        type: UserListFullItemDTO
     })
     findById(@Param('userId', ParseUUIDPipe) userId: string) {
         return this.userService.findById(userId);
@@ -29,7 +29,7 @@ export class UsersController {
 
     @Post()
     @ApiResponse({
-        type: UserListItemDTO
+        type: UserListFullItemDTO
     })
     create(@Body() data: UserRequestDTO) {
         return this.userService.create(data);
@@ -37,7 +37,7 @@ export class UsersController {
 
     @Put(':userId')
     @ApiResponse({
-        type: UserListItemDTO
+        type: UserListFullItemDTO
     })
     update(@Param('userId', ParseUUIDPipe) userId: string, @Body() data: UserRequestDTO) {
         return this.userService.update(userId, data);

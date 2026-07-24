@@ -32,20 +32,38 @@ export class ProjectsService {
   }
 
   async create(data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
+    
+    const fixedUserId = 'd8a0adab-4e91-4fd5-a974-0eb58c92129c';
+    
     const project = await this.prisma.project.create({
       data: {
         ...data,
-        createdById: 'd8a0adab-4e91-4fd5-a974-0eb58c92129c',
+        createdById: fixedUserId,
       }
-    })
+    });
 
+    
     if (!project) {
       throw new InternalServerErrorException(
         'Erro ao criar projeto. Contate o suporte',
       )
     }
+    
+    const collaborator = await this.prisma.projectCollaborator.create({
+      data: {
+        projectId: project.id,
+        userId: fixedUserId,
+        ROLE: 'OWNER'
+      }
+    });
 
-    return project
+    if (!collaborator) {
+      throw new InternalServerErrorException(
+        'Erro ao criar collaborator. Contate o suporte',
+      )
+    }
+
+    return project;
   }
 
   async update(id: string, data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
