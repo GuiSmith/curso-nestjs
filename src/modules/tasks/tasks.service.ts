@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
-import { TaskRequestDTO, TaskListItemDTO} from './task.dto';
+import { TaskCommentDTO, TaskListItemDTO, TaskRequestDTO } from './task.dto';
 
 @Injectable()
 export class TasksService {
@@ -23,12 +23,26 @@ export class TasksService {
     return tasks;
   }
 
-  async findById(projectId: string, taskId: string): Promise<TaskListItemDTO> {
+  async findById(projectId: string, taskId: string): Promise<TaskCommentDTO> {
     
     const task = await this.prisma.task.findFirst({
       where: {
         projectId,
         id: taskId,
+      },
+      include: {
+        comments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
       },
     })
 

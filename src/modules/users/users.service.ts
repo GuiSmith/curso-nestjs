@@ -84,7 +84,7 @@ export class UsersService {
                 const existingEmail = await tx.user.findFirst({
                     where: {
                         email: data.email,
-                        not: { id }
+                        NOT: { id }
                     }
                 });
 

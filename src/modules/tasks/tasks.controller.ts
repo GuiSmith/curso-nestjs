@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common'
 import { TasksService } from './tasks.service'
-import { TaskListItemDTO, TaskRequestDTO } from './task.dto'
+import { TaskCommentDTO, TaskListItemDTO, TaskRequestDTO } from './task.dto'
 import { ApiResponse } from '@nestjs/swagger'
 
 @Controller({
@@ -28,7 +28,7 @@ export class TasksController {
 
   @Get(':taskId')
   @ApiResponse({
-    type: TaskListItemDTO
+    type: TaskCommentDTO
   })
   findOne(
     @Param('projectId', ParseUUIDPipe) projectId: string,

@@ -9,6 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator'
+import { CommentListItemDTO } from '../comments/comments.dto'
 
 export class TaskRequestDTO {
   @ApiProperty({ description: 'Task title' })
@@ -64,4 +65,8 @@ export class TaskListItemDTO {
   @ApiProperty() projectId: string
   @ApiProperty({ format: 'date-time' }) createdAt: Date
   @ApiProperty({ format: 'date-time' }) updatedAt: Date
+}
+
+export class TaskCommentDTO extends TaskListItemDTO {
+  @ApiProperty({ type: [CommentListItemDTO] }) comments: CommentListItemDTO[]
 }
