@@ -71,7 +71,7 @@ export class CollaboratorsService {
 
   async update(projectId: string, collaboratorId: string, data: CollaboratorUpdateDTO): Promise<CollaboratorListItemDTO> {
     const existingCollaborator = await this.prisma.projectCollaborator.findFirst({
-      where: { id, projectId },
+      where: { id: collaboratorId, projectId },
       include: { user: true, project: true }
     });
 
