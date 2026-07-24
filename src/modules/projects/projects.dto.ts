@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator'
+import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
 import { TaskListItemDTO } from '../tasks/task.dto'
 
 export class ProjectRequestDTO {
@@ -11,6 +11,7 @@ export class ProjectRequestDTO {
   name: string
 
   @ApiProperty({ description: 'Project description', required: false, nullable: true })
+  @IsOptional()
   @IsString()
   @MaxLength(255)
   description?: string | null
