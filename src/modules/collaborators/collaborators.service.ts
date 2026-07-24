@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { CollaboratorCreateDTO, CollaboratorListItemDTO, CollaboratorUpdateDTO } from './collaborators.dto'
+import { CollaboratorRole } from '@prisma/client'
 
 @Injectable()
 export class CollaboratorsService {
@@ -49,6 +50,10 @@ export class CollaboratorsService {
       throw new ConflictException('Usuário já é colaborador deste projeto')
     }
 
+    if(data.role === CollaboratorRole.OWNER){
+      throw new ConflictException("You cannot set a collaborator as owner");
+    }
+
     const collaborator = await this.prisma.projectCollaborator.create({
       data: {
         userId: data.userId,
@@ -65,7 +70,22 @@ export class CollaboratorsService {
   }
 
   async update(projectId: string, collaboratorId: string, data: CollaboratorUpdateDTO): Promise<CollaboratorListItemDTO> {
-    await this.findById(projectId, collaboratorId)
+    const existingCollaborator = await this.prisma.projectCollaborator.findFirst({
+      where: { id, projectId },
+      include: { user: true, project: true }
+    });
+
+    if(!existingCollaborator){
+      throw new NotFoundException('Collaborator not found');
+    }
+
+    if(existingCollaborator.project.createdById === existingCollaborator.userId){
+      throw new ConflictException("You cannot change the role of the owner of the project");
+    }
+
+    if(data.role === CollaboratorRole.OWNER){
+      throw new ConflictException("You cannot set a collaborator as owner");
+    }
 
     const collaborator = await this.prisma.projectCollaborator.update({
       where: { id: collaboratorId, projectId },
