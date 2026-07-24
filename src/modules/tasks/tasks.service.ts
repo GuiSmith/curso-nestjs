@@ -7,6 +7,13 @@ export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAllByProject(projectId: string): Promise<TaskListItemDTO[]> {
+    
+    const project = await this.prisma.project.findFirst({ where: { id: projectId }});
+
+    if(!project){
+      throw new NotFoundException('Project not found');
+    }
+    
     const tasks = await this.prisma.task.findMany({ where: { projectId } });
 
     if(!tasks){
@@ -17,6 +24,7 @@ export class TasksService {
   }
 
   async findById(projectId: string, taskId: string): Promise<TaskListItemDTO> {
+    
     const task = await this.prisma.task.findFirst({
       where: {
         projectId,
@@ -32,6 +40,13 @@ export class TasksService {
   }
 
   async create(projectId: string, data: TaskRequestDTO): Promise<TaskListItemDTO> {
+    
+    const project = await this.prisma.project.findFirst({ where: { id: projectId }});
+
+    if(!project){
+      throw new NotFoundException('Project not found');
+    }
+    
     const task = await this.prisma.task.create({
       data: {
         ...data,
