@@ -42,10 +42,4 @@ export class UsersController {
     update(@Param('userId', ParseUUIDPipe) userId: string, @Body() data: UserRequestDTO) {
         return this.userService.update(userId, data);
     }
-
-    @Delete(':userId')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    remove(@Param('userId', ParseUUIDPipe) userId: string) {
-        return this.userService.remove(userId);
-    }
 }
