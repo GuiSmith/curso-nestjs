@@ -23,19 +23,13 @@ export class UsersService {
         return safeUser;
     }
 
-    async findByEmail(email: string): Promise<UserListFullItemDTO> {
+    async findByEmail(email: string): Promise<boolean> {
         const user = await this.prisma.user.findFirst({
             where: { email },
             include: { createdProjects: true }
         });
 
-        if(!user){
-            throw new NotFoundException('Usuário não encontrado');
-        }
-
-        const { password: _, ...safeUser } = user;
-
-        return safeUser;
+        return Boolean(user);
     }
 
     async findAll(): Promise<UserListFullItemDTO[]> {
