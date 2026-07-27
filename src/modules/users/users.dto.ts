@@ -53,3 +53,10 @@ export class UserListFullItemDTO extends UserListItemDTO {
     @ApiProperty({ description: "User's projects", type: [ProjectListItemDTO] })
     createdProjects: ProjectListItemDTO[]
 }
+
+export class AuthenticatedUserDTO {
+    id: string
+    name: string
+    email: string
+    avatar: string | null
+}
