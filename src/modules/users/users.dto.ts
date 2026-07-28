@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator"
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator"
+import { Role } from "@prisma/client";
 import { ProjectListItemDTO } from "../projects/projects.dto"
 
 
@@ -27,6 +28,11 @@ export class UserRequestDTO {
     @IsOptional()
     @IsString()
     avatar?: string
+
+    @ApiProperty({ description: 'User role', enum: Role, default: Role.ADMIN, required: false })
+    @IsEnum(Role)
+    @IsOptional()
+    role?: Role = Role.ADMIN
 }
 
 export class UserListItemDTO {

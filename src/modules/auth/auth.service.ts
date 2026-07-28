@@ -1,12 +1,11 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt'
 import { ForgotPasswordResponseDTO, SignInDTO, SignUpDTO, TokenResponseDTO } from './auth.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { MailService } from '../mail/mail.service';
-import { toSafeUser } from 'src/common/mappers/toSafeUser.mapper';
-import { AuthenticatedUserDTO } from '../users/users.dto';
+import { UserListFullItemDTO } from '../users/users.dto';
 import { PURPOSE_REQUESTS_KEY, PURPOSE_RESET_PASSWORD_KEY } from 'src/consts';
 
 @Injectable()
@@ -23,20 +22,8 @@ export class AuthService {
     }
 
     async signup(data: SignUpDTO): Promise<TokenResponseDTO> {
-        const passwordHash = await this.getHashedPassword(data.password);
 
-        const isEmailAvailable = await this.userService.isEmailAvailable(data.email);
-
-        if(!isEmailAvailable){
-            throw new ConflictException('E-mail already registered or unavailable. Use another one');
-        }
-
-        const user = await this.prismaService.user.create({
-            data: {
-                ...data,
-                password: passwordHash,
-            }
-        });
+        const user = await this.userService.create(data);
 
         return {
             token: this.jwtService.sign({
@@ -47,9 +34,9 @@ export class AuthService {
     }
 
     async signIn(data: SignInDTO): Promise<TokenResponseDTO> {
-        const user = await this.prismaService.user.findFirst({ where: { email: data.email }});
+        const user = await this.userService.findByEmail(data.email);
 
-        if(user && await bcrypt.compare(data.password, user.password)){
+        if(await bcrypt.compare(data.password, user.password)){
             return {
                 token: this.jwtService.sign({
                     sub: user.id,
@@ -80,22 +67,15 @@ export class AuthService {
 
     }
 
-    async resetPassword (token: string, newPassword: string): Promise<AuthenticatedUserDTO> {
+    async resetPassword (token: string, newPassword: string): Promise<UserListFullItemDTO> {
         const payload = this.jwtService.verify(token);
 
         if(payload.purpose !== PURPOSE_RESET_PASSWORD_KEY){
             throw new BadRequestException(`Invalid token purpose: ${payload.purpose}`);
         }
 
-        const user = await this.userService.findByEmail(payload.sub);
+        const updatedUser = await this.userService.updatePassword(payload.sub, newPassword);
 
-        const hashedPassword = await this.getHashedPassword(newPassword);
-
-        const updatedUser = await this.prismaService.user.update({
-            where: { id: user.id },
-            data: { password: hashedPassword },
-        });
-
-        return toSafeUser(updatedUser);
+        return updatedUser;
     }
 }

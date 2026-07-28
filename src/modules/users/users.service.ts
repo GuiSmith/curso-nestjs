@@ -1,10 +1,11 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { AuthenticatedUserDTO, UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
+import { UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
 import { User } from '@prisma/client';
-import { toSafeUser } from 'src/common/mappers/toSafeUser.mapper';
 import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto';
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils';
+import * as bcrypt from 'bcrypt';
+import { SignUpDTO } from '../auth/auth.dto';
 
 @Injectable()
 export class UsersService {
@@ -14,12 +15,30 @@ export class UsersService {
     private select = {
         id: true,
         name: true,
-        avatar: true,
         email: true,
+        avatar: true,
         createdAt: true,
         updatedAt: true,
         createdProjects: true
     };
+
+    private async getHashedPassword(password: string): Promise<string> {
+        return await bcrypt.hash(password, 12);
+    }
+
+    async updatePassword(email: string, password: string): Promise<UserListFullItemDTO> {
+        await this.findByEmail(email);
+        
+        const hashedPassword = await this.getHashedPassword(password);
+
+        const updatedUser = this.prisma.user.update({
+            where: { email },
+            data: { password: hashedPassword },
+            select: this.select
+        });
+
+        return updatedUser;
+    }
 
     async findById(id: string): Promise<UserListFullItemDTO> {
         const user = await this.prisma.user.findFirst({
@@ -68,7 +87,7 @@ export class UsersService {
         return paginateOutput<UserListFullItemDTO>(users, total, query);
     }
 
-    async create(data: UserRequestDTO): Promise<UserListFullItemDTO> {
+    async create(data: SignUpDTO): Promise<UserListFullItemDTO> {
 
         const user = await this.prisma.$transaction(async tx => {
             const existingEmail = await tx.user.findFirst({ where: { email: data.email }});
@@ -76,19 +95,19 @@ export class UsersService {
             if(existingEmail){
                 throw new ConflictException("This email is already being used by another user");
             }
+
+            const hashedPassword = await this.getHashedPassword(data.password);
             
             const createdUser = await tx.user.create({
-                data,
-                include: { createdProjects: true }
+                data: { ...data, password: hashedPassword },
+                select: this.select
             });
 
             return createdUser;
 
         });
 
-        const { password: _, ...safeUser } = user;
-
-        return safeUser;
+        return user;
     }
 
     async update(id: string, data: UserRequestDTO): Promise<UserListFullItemDTO> {
@@ -113,19 +132,19 @@ export class UsersService {
                 }
             }
 
+            const hashedPassword = await this.getHashedPassword(data.password);
+
             const createdUser = await tx.user.update({
                 where: { id },
-                data,
-                include: { createdProjects: true },
+                data: { ...data, password: hashedPassword },
+                select: this.select,
             });
 
             return createdUser;
             
         });
 
-        const { password: _, ...safeUser } = user;
-
-        return safeUser;
+        return user;
     }
 
 }
