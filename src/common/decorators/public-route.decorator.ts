@@ -1,5 +1,10 @@
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata, applyDecorators } from '@nestjs/common';
+import { ApiSecurity } from '@nestjs/swagger';
+import { PUBLIC_ROUTE_KEY } from 'src/consts';
 
-export const PUBLIC_ROUTE_KEY = 'PublicRoute'
-
-export const PublicRoute = (...args: string[]) => SetMetadata(PUBLIC_ROUTE_KEY, args);
+export const PublicRoute = () => {
+    return applyDecorators(
+        SetMetadata(PUBLIC_ROUTE_KEY, true),
+        ApiSecurity({}),
+    )
+}

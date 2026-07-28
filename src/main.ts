@@ -18,6 +18,14 @@ async function bootstrap() {
     .setTitle('Curso NestJS - Tasks API')
     .setDescription('API desenvolvida durante o curso de NestJS - Monaro Dev')
     .setVersion('1')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'Authorization',
+      in: 'header'
+    }, 'jwt')
+    .addSecurityRequirements('jwt')
     .build()
 
   const documentFactory = () => SwaggerModule.createDocument(app, config)
