@@ -37,11 +37,21 @@ export class SignInDTO {
     password: string
 }
 
-export class ForgotPasswordDTO {
+export class TokenResponseDTO {
+    @ApiProperty({ description: 'authentication bearer token'})
+    token: string
+}
+
+export class ForgotPasswordRequestDTO {
     @ApiProperty({ description: 'User email'})
     @IsEmail()
     @IsNotEmpty()
     email: string
+}
+
+export class ForgotPasswordResponseDTO {
+    @ApiProperty({ description: 'Response message'})
+    message: string
 }
 
 export class ResetPasswordDTO {

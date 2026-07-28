@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UserListFullItemDTO, UserRequestDTO } from './users.dto';
+import { AuthenticatedUserDTO, UserListFullItemDTO, UserRequestDTO } from './users.dto';
 import { ApiResponse } from '@nestjs/swagger';
 
 @Controller({
@@ -21,7 +21,7 @@ export class UsersController {
 
     @Get(':userId')
     @ApiResponse({
-        type: UserListFullItemDTO
+        type: AuthenticatedUserDTO
     })
     findById(@Param('userId', ParseUUIDPipe) userId: string) {
         return this.userService.findById(userId);

@@ -10,9 +10,10 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard'
 import { APP_GUARD } from '@nestjs/core';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
-  imports: [ProjectsModule, TasksModule, UsersModule, CollaboratorsModule, CommentsModule, AuthModule],
+  imports: [ProjectsModule, TasksModule, UsersModule, CollaboratorsModule, CommentsModule, AuthModule, MailModule],
   controllers: [AppController],
   providers: [AppService, PrismaService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })

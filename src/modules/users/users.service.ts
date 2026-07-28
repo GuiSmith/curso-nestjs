@@ -1,13 +1,15 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
+import { AuthenticatedUserDTO, UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
+import { User } from '@prisma/client';
+import { toSafeUser } from 'src/common/mappers/toSafeUser.mapper';
 
 @Injectable()
 export class UsersService {
 
     constructor(private readonly prisma: PrismaService) {}
 
-    async findById(id: string): Promise<UserListFullItemDTO> {
+    async findById(id: string): Promise<AuthenticatedUserDTO> {
         const user = await this.prisma.user.findFirst({
             where: { id },
             include: { createdProjects: true }
@@ -17,19 +19,34 @@ export class UsersService {
         if(!user){
             throw new NotFoundException('Usuário não encontrado');
         }
-        
-        const { password: _, ...safeUser } = user;
 
-        return safeUser;
+        return toSafeUser(user);
     }
 
-    async findByEmail(email: string): Promise<boolean> {
-        const user = await this.prisma.user.findFirst({
+    async findByEmail(email: string): Promise<User> {
+        const user = await this.prisma.user.findUnique({
             where: { email },
             include: { createdProjects: true }
         });
 
-        return Boolean(user);
+        if(!user){
+            throw new NotFoundException('User not found');
+        }
+
+        return user;
+    }
+
+    async isEmailAvailable(email: string): Promise<boolean> {
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+            include: { createdProjects: true }
+        });
+
+        if(user){
+            return false;
+        }
+
+        return true;
     }
 
     async findAll(): Promise<UserListFullItemDTO[]> {
