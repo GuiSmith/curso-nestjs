@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { toSafeUser } from "src/common/mappers/toSafeUser.mapper";
 import { PrismaService } from "src/prisma.service";
 import { AuthenticatedUserDTO } from "../users/users.dto";
-import { PURPOSE_REQUESTS_KEY } from "./auth.service";
+import { PURPOSE_REQUESTS_KEY } from "src/consts";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

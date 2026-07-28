@@ -7,9 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { MailService } from '../mail/mail.service';
 import { toSafeUser } from 'src/common/mappers/toSafeUser.mapper';
 import { AuthenticatedUserDTO } from '../users/users.dto';
-
-export const PURPOSE_REQUESTS_KEY = "requests";
-export const PURPOSE_RESET_PASSWORD_KEY = "password-reset";
+import { PURPOSE_REQUESTS_KEY, PURPOSE_RESET_PASSWORD_KEY } from 'src/consts';
 
 @Injectable()
 export class AuthService {
