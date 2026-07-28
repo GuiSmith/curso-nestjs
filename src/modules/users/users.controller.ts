@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { UserListFullItemDTO, UserRequestDTO } from './users.dto';
 import { ApiResponse } from '@nestjs/swagger';
 import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto';
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator';
 
 @Controller({
     version: '1',
@@ -13,9 +14,7 @@ export class UsersController {
     constructor(private readonly userService: UsersService){}
 
     @Get()
-    @ApiResponse({
-        type: [UserListFullItemDTO]
-    })
+    @ApiPaginatedResponse(UserListFullItemDTO)
     findAll(@Query() query: QueryPaginationDTO) {
         return this.userService.findAll(query);
     }

@@ -5,6 +5,7 @@ import { ProjectsService } from './projects.service'
 import { AuthenticatedUser } from 'src/common/decorators/authenticated-user.decorator'
 import { AuthenticatedUserDTO } from '../users/users.dto'
 import { QueryPaginationDTO, PaginatedResponseDTO } from 'src/common/dtos/query-pagination.dto'
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator'
 
 @Controller({
   version: '1',
@@ -14,9 +15,7 @@ export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Get()
-  @ApiResponse({
-    type: [ProjectListItemDTO]
-  })
+  @ApiPaginatedResponse(ProjectListItemDTO)
   findAll(
     @AuthenticatedUser() user: AuthenticatedUserDTO,
     @Query() query: QueryPaginationDTO

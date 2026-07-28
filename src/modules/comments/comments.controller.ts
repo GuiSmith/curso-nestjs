@@ -3,6 +3,7 @@ import { ApiResponse } from '@nestjs/swagger'
 import { CommentFullDTO, CommentListItemDTO, CommentRequestDTO } from './comments.dto'
 import { CommentsService } from './comments.service'
 import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator'
 
 @Controller({
   version: '1',
@@ -12,9 +13,7 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Get()
-  @ApiResponse({
-    type: [CommentListItemDTO],
-  })
+  @ApiPaginatedResponse(CommentListItemDTO)
   findAllByTask(
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('taskId', ParseUUIDPipe) taskId: string,

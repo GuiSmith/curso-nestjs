@@ -3,6 +3,7 @@ import { TasksService } from './tasks.service'
 import { TaskCommentDTO, TaskListItemDTO, TaskRequestDTO } from './task.dto'
 import { ApiResponse } from '@nestjs/swagger'
 import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator'
 
 @Controller({
   version: '1',
@@ -12,9 +13,7 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get()
-  @ApiResponse({
-    type: [TaskListItemDTO]
-  })
+  @ApiPaginatedResponse(TaskListItemDTO)
   findAllByProject(
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Query() query: QueryPaginationDTO

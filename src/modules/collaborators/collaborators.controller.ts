@@ -3,6 +3,7 @@ import { ApiResponse } from '@nestjs/swagger'
 import { CollaboratorCreateDTO, CollaboratorListItemDTO, CollaboratorUpdateDTO } from './collaborators.dto'
 import { CollaboratorsService } from './collaborators.service'
 import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator'
 
 @Controller({
   version: '1',
@@ -12,9 +13,7 @@ export class CollaboratorsController {
   constructor(private readonly collaboratorsService: CollaboratorsService) {}
 
   @Get()
-  @ApiResponse({
-    type: [CollaboratorListItemDTO],
-  })
+  @ApiPaginatedResponse(CollaboratorListItemDTO)
   findAllByProject(
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Query() query: QueryPaginationDTO
