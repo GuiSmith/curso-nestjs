@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthenticatedUserDTO, UserListFullItemDTO, UserRequestDTO } from './users.dto';
+import { UserListFullItemDTO, UserRequestDTO } from './users.dto';
 import { ApiResponse } from '@nestjs/swagger';
+import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto';
 
 @Controller({
     version: '1',
@@ -15,13 +16,13 @@ export class UsersController {
     @ApiResponse({
         type: [UserListFullItemDTO]
     })
-    findAll() {
-        return this.userService.findAll();
+    findAll(@Query() query: QueryPaginationDTO) {
+        return this.userService.findAll(query);
     }
 
     @Get(':userId')
     @ApiResponse({
-        type: AuthenticatedUserDTO
+        type: UserListFullItemDTO
     })
     findById(@Param('userId', ParseUUIDPipe) userId: string) {
         return this.userService.findById(userId);

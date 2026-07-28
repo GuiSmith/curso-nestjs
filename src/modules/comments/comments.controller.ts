@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { CommentFullDTO, CommentListItemDTO, CommentRequestDTO } from './comments.dto'
 import { CommentsService } from './comments.service'
+import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 
 @Controller({
   version: '1',
@@ -17,8 +18,9 @@ export class CommentsController {
   findAllByTask(
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('taskId', ParseUUIDPipe) taskId: string,
+    @Query() query: QueryPaginationDTO
   ) {
-    return this.commentsService.findAllByTask(projectId, taskId)
+    return this.commentsService.findAllByTask(projectId, taskId, query)
   }
 
   @Post()

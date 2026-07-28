@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { CollaboratorCreateDTO, CollaboratorListItemDTO, CollaboratorUpdateDTO } from './collaborators.dto'
 import { CollaboratorsService } from './collaborators.service'
+import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 
 @Controller({
   version: '1',
@@ -14,8 +15,11 @@ export class CollaboratorsController {
   @ApiResponse({
     type: [CollaboratorListItemDTO],
   })
-  findAllByProject(@Param('projectId', ParseUUIDPipe) projectId: string) {
-    return this.collaboratorsService.findAllByProject(projectId)
+  findAllByProject(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Query() query: QueryPaginationDTO
+  ) {
+    return this.collaboratorsService.findAllByProject(projectId, query)
   }
 
   @Post()

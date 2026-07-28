@@ -1,21 +1,24 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
+import type { Project } from '@prisma/client';
 import { ProjectListItemDTO, ProjectRequestDTO, ProjectTaskDTO } from './projects.dto'
+import { QueryPaginationDTO, PaginatedResponseDTO } from 'src/common/dtos/query-pagination.dto'
+import { paginate, paginateOutput } from 'src/common/utils/pagination.utils'
 
 @Injectable()
 export class ProjectsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<ProjectListItemDTO[]> {
-    const projects = await this.prisma.project.findMany()
+  async findAll(createdById: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<ProjectListItemDTO>> {
 
-    if (!projects) {
-      throw new InternalServerErrorException(
-        'Erro ao listar projetos. Contate o suporte',
-      )
-    }
+    const where = { createdById };
 
-    return projects
+    const [projects, total] = await Promise.all([
+      this.prisma.project.findMany({ ...paginate(query), where }),
+      this.prisma.project.count({ where })
+    ]);
+
+    return paginateOutput<ProjectListItemDTO>(projects, total, query);
   }
 
   async findById(id: string): Promise<ProjectTaskDTO> {

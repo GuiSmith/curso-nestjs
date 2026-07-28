@@ -1,7 +1,10 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { ProjectListItemDTO, ProjectRequestDTO, ProjectTaskDTO } from './projects.dto'
 import { ProjectsService } from './projects.service'
+import { AuthenticatedUser } from 'src/common/decorators/authenticated-user.decorator'
+import { AuthenticatedUserDTO } from '../users/users.dto'
+import { QueryPaginationDTO, PaginatedResponseDTO } from 'src/common/dtos/query-pagination.dto'
 
 @Controller({
   version: '1',
@@ -12,10 +15,13 @@ export class ProjectsController {
 
   @Get()
   @ApiResponse({
-    type: [ProjectListItemDTO],
+    type: [ProjectListItemDTO]
   })
-  findAll() {
-    return this.projectsService.findAll()
+  findAll(
+    @AuthenticatedUser() user: AuthenticatedUserDTO,
+    @Query() query: QueryPaginationDTO
+  ) {
+    return this.projectsService.findAll(user.id, query)
   }
 
   @Get(':id')

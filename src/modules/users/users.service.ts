@@ -3,16 +3,28 @@ import { PrismaService } from 'src/prisma.service';
 import { AuthenticatedUserDTO, UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
 import { User } from '@prisma/client';
 import { toSafeUser } from 'src/common/mappers/toSafeUser.mapper';
+import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto';
+import { paginate, paginateOutput } from 'src/common/utils/pagination.utils';
 
 @Injectable()
 export class UsersService {
 
     constructor(private readonly prisma: PrismaService) {}
 
-    async findById(id: string): Promise<AuthenticatedUserDTO> {
+    private select = {
+        id: true,
+        name: true,
+        avatar: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+        createdProjects: true
+    };
+
+    async findById(id: string): Promise<UserListFullItemDTO> {
         const user = await this.prisma.user.findFirst({
             where: { id },
-            include: { createdProjects: true }
+            select: this.select
         });
 
         
@@ -20,14 +32,11 @@ export class UsersService {
             throw new NotFoundException('Usuário não encontrado');
         }
 
-        return toSafeUser(user);
+        return user;
     }
 
     async findByEmail(email: string): Promise<User> {
-        const user = await this.prisma.user.findUnique({
-            where: { email },
-            include: { createdProjects: true }
-        });
+        const user = await this.prisma.user.findUnique({ where: { email } });
 
         if(!user){
             throw new NotFoundException('User not found');
@@ -49,14 +58,14 @@ export class UsersService {
         return true;
     }
 
-    async findAll(): Promise<UserListFullItemDTO[]> {
-        const users = await this.prisma.user.findMany({
-            include: { createdProjects: true }
-        });
+    async findAll(query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<UserListFullItemDTO>> {
 
-        const safeUsers = users.map(({ password: _, ...safeUser }) => safeUser);
+        const [users, total] = await Promise.all([
+            this.prisma.user.findMany({ ...paginate(query), select: this.select }),
+            this.prisma.user.count()
+        ]);
 
-        return safeUsers;
+        return paginateOutput<UserListFullItemDTO>(users, total, query);
     }
 
     async create(data: UserRequestDTO): Promise<UserListFullItemDTO> {

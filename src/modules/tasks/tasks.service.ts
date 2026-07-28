@@ -1,26 +1,28 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { TaskCommentDTO, TaskListItemDTO, TaskRequestDTO } from './task.dto';
+import { paginate, paginateOutput } from 'src/common/utils/pagination.utils';
+import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto';
 
 @Injectable()
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllByProject(projectId: string): Promise<TaskListItemDTO[]> {
+  async findAllByProject(projectId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<TaskListItemDTO>> {
     
-    const project = await this.prisma.project.findFirst({ where: { id: projectId }});
+    const where = { projectId };
 
+    const [project, tasks, total] = await Promise.all([
+      this.prisma.project.findUnique({ where: { id: projectId } }),
+      this.prisma.task.findMany({ ...paginate(query), where }),
+      this.prisma.task.count({ where }),
+    ]);
+    
     if(!project){
       throw new NotFoundException('Project not found');
     }
-    
-    const tasks = await this.prisma.task.findMany({ where: { projectId } });
 
-    if(!tasks){
-      throw new InternalServerErrorException('Erro ao listar tarefas. Contate o suporte');
-    }
-
-    return tasks;
+    return paginateOutput<TaskListItemDTO>(tasks, total, query)
   }
 
   async findById(projectId: string, taskId: string): Promise<TaskCommentDTO> {

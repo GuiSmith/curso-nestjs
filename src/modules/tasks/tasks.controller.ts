@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common'
 import { TasksService } from './tasks.service'
 import { TaskCommentDTO, TaskListItemDTO, TaskRequestDTO } from './task.dto'
 import { ApiResponse } from '@nestjs/swagger'
+import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 
 @Controller({
   version: '1',
@@ -14,8 +15,11 @@ export class TasksController {
   @ApiResponse({
     type: [TaskListItemDTO]
   })
-  findAllByProject(@Param('projectId', ParseUUIDPipe) projectId: string) {
-    return this.tasksService.findAllByProject(projectId)
+  findAllByProject(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Query() query: QueryPaginationDTO
+  ) {
+    return this.tasksService.findAllByProject(projectId, query)
   }
 
   @Post()

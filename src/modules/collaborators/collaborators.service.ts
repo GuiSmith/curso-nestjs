@@ -2,22 +2,29 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { PrismaService } from 'src/prisma.service'
 import { CollaboratorCreateDTO, CollaboratorListItemDTO, CollaboratorUpdateDTO } from './collaborators.dto'
 import { CollaboratorRole } from '@prisma/client'
+import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
+import { paginate, paginateOutput } from 'src/common/utils/pagination.utils'
 
 @Injectable()
 export class CollaboratorsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllByProject(projectId: string): Promise<CollaboratorListItemDTO[]> {
-    const collaborators = await this.prisma.projectCollaborator.findMany({
-      where: { projectId },
-      include: { user: true },
-    })
+  async findAllByProject(projectId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<CollaboratorListItemDTO>> {
 
-    return collaborators.map(({ ROLE: role, user, ...collaborator }) => {
+    const where = { projectId };
+
+    const [collaboratorsList, total] = await Promise.all([
+      this.prisma.projectCollaborator.findMany({ ...paginate(query), where, include: { user: true } }),
+      this.prisma.projectCollaborator.count({ where }),
+    ]);
+
+    const collaborators =  collaboratorsList.map(({ ROLE: role, user, ...collaborator }) => {
       const { password: _, role: _userRole, ...safeUser } = user
 
       return { ...collaborator, role, user: safeUser }
     })
+
+    return paginateOutput<CollaboratorListItemDTO>(collaborators, total, query);
   }
 
   async findById(projectId: string, id: string): Promise<CollaboratorListItemDTO> {

@@ -1,39 +1,45 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { CommentFullDTO, CommentListItemDTO, CommentRequestDTO } from './comments.dto'
+import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
+import { paginate, paginateOutput } from 'src/common/utils/pagination.utils';
 
 @Injectable()
 export class CommentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllByTask(projectId: string, taskId: string): Promise<CommentListItemDTO[]> {
-    const task = await this.prisma.task.findFirst({
-      where: { id: taskId, projectId },
-    })
+  async findAllByTask(projectId: string, taskId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<CommentListItemDTO>> {
 
-    if (!task) {
-      throw new NotFoundException('Tarefa não encontrada')
+    const task = await this.prisma.task.findFirst({ where: { projectId, id: taskId }});
+
+    if(!task){
+      throw new NotFoundException('Project not found');
     }
 
-    return this.prisma.comment.findMany({
-      where: { taskId },
-      select: {
-        id: true,
-        content: true,
-        taskId: true,
-        authorId: true,
-        createdAt: true,
-        updatedAt: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-          },
+    const where = { taskId };
+    const select = {
+      id: true,
+      content: true,
+      taskId: true,
+      authorId: true,
+      createdAt: true,
+      updatedAt: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
         },
       },
-    })
+    };
+
+    const [comments, total] = await Promise.all([
+      this.prisma.comment.findMany({ ...paginate(query), where, select }),
+      this.prisma.comment.count({ where }),
+    ]);
+
+    return paginateOutput<CommentListItemDTO>(comments, total, query);
   }
 
   async findById(projectId: string, taskId: string, commentId: string): Promise<CommentFullDTO> {
