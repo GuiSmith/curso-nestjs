@@ -105,32 +105,4 @@ export class TasksService {
 
     return updatedTask;
   }
-
-  async delete(projectId: string, taskId: string): Promise<TaskListItemDTO> {
-    const existingTask = await this.prisma.task.findFirst({
-      where: {
-        id: taskId,
-        projectId,
-      },
-    })
-
-    if (!existingTask) {
-      throw new NotFoundException('Tarefa não encontrada')
-    }
-
-    const deletedTask = await this.prisma.task.delete({
-      where: {
-        id: taskId,
-        projectId,
-      },
-    })
-
-    if (!deletedTask) {
-      throw new InternalServerErrorException(
-        'Tarefa não excluída. Contate o suporte',
-      )
-    }
-
-    return deletedTask
-  }
 }

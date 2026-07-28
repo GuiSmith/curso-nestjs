@@ -51,13 +51,4 @@ export class TasksController {
   ) {
     return this.tasksService.update(projectId, taskId, data)
   }
-
-  @Delete(':taskId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(
-    @Param('projectId', ParseUUIDPipe) projectId: string,
-    @Param('taskId', ParseUUIDPipe) taskId: string,
-  ) {
-    return this.tasksService.delete(projectId, taskId)
-  }
 }
