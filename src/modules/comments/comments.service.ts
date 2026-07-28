@@ -81,7 +81,7 @@ export class CommentsService {
     return comment
   }
 
-  async create(projectId: string, taskId: string, data: CommentRequestDTO): Promise<CommentListItemDTO> {
+  async create(authorId: string, projectId: string, taskId: string, data: CommentRequestDTO): Promise<CommentListItemDTO> {
     const task = await this.prisma.task.findFirst({
       where: { id: taskId, projectId },
     })
@@ -90,13 +90,11 @@ export class CommentsService {
       throw new NotFoundException('Tarefa não encontrada')
     }
 
-    const fixedUserId = 'd8a0adab-4e91-4fd5-a974-0eb58c92129c'
-
     return this.prisma.comment.create({
       data: {
         ...data,
         taskId,
-        authorId: fixedUserId,
+        authorId,
       },
       select: {
         id: true,

@@ -4,6 +4,8 @@ import { CommentFullDTO, CommentListItemDTO, CommentRequestDTO } from './comment
 import { CommentsService } from './comments.service'
 import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator'
+import { AuthenticatedUser } from 'src/common/decorators/authenticated-user.decorator'
+import { AuthenticatedUserDTO } from '../users/users.dto'
 
 @Controller({
   version: '1',
@@ -30,8 +32,9 @@ export class CommentsController {
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('taskId', ParseUUIDPipe) taskId: string,
     @Body() data: CommentRequestDTO,
+    @AuthenticatedUser() user: AuthenticatedUserDTO
   ) {
-    return this.commentsService.create(projectId, taskId, data)
+    return this.commentsService.create(user.id, projectId, taskId, data)
   }
 
   @Get(':commentId')

@@ -34,23 +34,21 @@ export class ProjectsService {
     return project
   }
 
-  async create(data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
+  async create(userId: string, data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
     
-    const fixedUserId = 'd8a0adab-4e91-4fd5-a974-0eb58c92129c';
-
     const newProject = await this.prisma.$transaction(async tx => {
 
       const project = await tx.project.create({
         data: {
           ...data,
-          createdById: fixedUserId,
+          createdById: userId,
         }
       });
             
       const collaborator = await tx.projectCollaborator.create({
         data: {
           projectId: project.id,
-          userId: fixedUserId,
+          userId: userId,
           ROLE: 'OWNER'
         }
       });

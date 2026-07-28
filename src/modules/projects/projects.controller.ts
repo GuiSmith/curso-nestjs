@@ -35,8 +35,11 @@ export class ProjectsController {
   @ApiResponse({
     type: ProjectListItemDTO,
   })
-  create(@Body() data: ProjectRequestDTO) {
-    return this.projectsService.create(data)
+  create(
+    @Body() data: ProjectRequestDTO,
+    @AuthenticatedUser() user: AuthenticatedUserDTO
+  ) {
+    return this.projectsService.create(user.id, data)
   }
 
   @Put(':id')
