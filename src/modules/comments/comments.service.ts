@@ -3,10 +3,16 @@ import { PrismaService } from 'src/prisma.service'
 import { CommentFullDTO, CommentListItemDTO, CommentRequestDTO } from './comments.dto'
 import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils';
+import { CollaboratorsService } from '../collaborators/collaborators.service';
+import { RequestContextService } from 'src/common/services/request-context.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly collaboratorService: CollaboratorsService,
+    private readonly requestContextService: RequestContextService,
+  ) {}
 
   async findAllByTask(projectId: string, taskId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<CommentListItemDTO>> {
 

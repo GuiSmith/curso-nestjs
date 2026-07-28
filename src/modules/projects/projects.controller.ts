@@ -2,9 +2,7 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@
 import { ApiResponse } from '@nestjs/swagger'
 import { ProjectListItemDTO, ProjectRequestDTO, ProjectTaskDTO } from './projects.dto'
 import { ProjectsService } from './projects.service'
-import { AuthenticatedUser } from 'src/common/decorators/authenticated-user.decorator'
-import { AuthenticatedUserDTO } from '../users/users.dto'
-import { QueryPaginationDTO, PaginatedResponseDTO } from 'src/common/dtos/query-pagination.dto'
+import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator'
 
 @Controller({
@@ -16,11 +14,8 @@ export class ProjectsController {
 
   @Get()
   @ApiPaginatedResponse(ProjectListItemDTO)
-  findAll(
-    @AuthenticatedUser() user: AuthenticatedUserDTO,
-    @Query() query: QueryPaginationDTO
-  ) {
-    return this.projectsService.findAll(user.id, query)
+  findAll(@Query() query: QueryPaginationDTO) {
+    return this.projectsService.findAll(query)
   }
 
   @Get(':id')
@@ -35,18 +30,17 @@ export class ProjectsController {
   @ApiResponse({
     type: ProjectListItemDTO,
   })
-  create(
-    @Body() data: ProjectRequestDTO,
-    @AuthenticatedUser() user: AuthenticatedUserDTO
-  ) {
-    return this.projectsService.create(user.id, data)
+  create(@Body() data: ProjectRequestDTO) {
+    return this.projectsService.create(data)
   }
 
   @Put(':id')
   @ApiResponse({
     type: ProjectListItemDTO,
   })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() data: ProjectRequestDTO) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() data: ProjectRequestDTO) {
     return this.projectsService.update(id, data)
   }
 }

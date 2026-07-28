@@ -1,15 +1,41 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { CollaboratorCreateDTO, CollaboratorListItemDTO, CollaboratorUpdateDTO } from './collaborators.dto'
 import { CollaboratorRole } from '@prisma/client'
 import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils'
+import { ProjectsService } from '../projects/projects.service'
+import { RequestContextService } from 'src/common/services/request-context.service'
 
 @Injectable()
 export class CollaboratorsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly projectService: ProjectsService,
+    private readonly requestContext: RequestContextService,
+  ) {}
+
+  async isCollaborator(projectId: string): Promise<boolean> {
+    const collaborator = await this.prisma.projectCollaborator.findUnique({
+      where: {
+        userId_projectId: {
+          userId: this.requestContext.getUser().id, 
+          projectId
+        }
+      }
+    }
+  );
+
+    return Boolean(collaborator);
+  }
 
   async findAllByProject(projectId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<CollaboratorListItemDTO>> {
+
+    const isCollaborator = await this.isCollaborator(projectId);
+
+    if(!isCollaborator){
+      throw new ForbiddenException();
+    }
 
     const where = { projectId };
 
@@ -28,6 +54,13 @@ export class CollaboratorsService {
   }
 
   async findById(projectId: string, id: string): Promise<CollaboratorListItemDTO> {
+
+    const isCollaborator = await this.isCollaborator(projectId);
+
+    if(!isCollaborator){
+      throw new ForbiddenException();
+    }
+
     const collaborator = await this.prisma.projectCollaborator.findUnique({
       where: { id, projectId },
       include: { user: true },
@@ -44,6 +77,13 @@ export class CollaboratorsService {
   }
 
   async create(projectId: string, data: CollaboratorCreateDTO): Promise<CollaboratorListItemDTO> {
+
+    const canEditProject = await this.projectService.canEdit(projectId);
+
+    if(!canEditProject){
+      throw new ForbiddenException();
+    }
+
     const existingCollaborator = await this.prisma.projectCollaborator.findUnique({
       where: {
         userId_projectId: {
@@ -77,6 +117,13 @@ export class CollaboratorsService {
   }
 
   async update(projectId: string, collaboratorId: string, data: CollaboratorUpdateDTO): Promise<CollaboratorListItemDTO> {
+
+    const canEditProject = await this.projectService.canEdit(projectId);
+
+    if(!canEditProject){
+      throw new ForbiddenException();
+    }
+
     const existingCollaborator = await this.prisma.projectCollaborator.findFirst({
       where: { id: collaboratorId, projectId },
       include: { user: true, project: true }
@@ -107,6 +154,13 @@ export class CollaboratorsService {
   }
 
   async remove(projectId: string, id: string): Promise<CollaboratorListItemDTO> {
+
+    const canEditProject = await this.projectService.canEdit(projectId);
+
+    if(!canEditProject){
+      throw new ForbiddenException();
+    }
+
     const existingCollaborator = await this.prisma.projectCollaborator.findFirst({
       where: { id, projectId },
       include: { user: true, project: true }

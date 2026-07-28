@@ -1,17 +1,38 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
-import type { Project } from '@prisma/client';
 import { ProjectListItemDTO, ProjectRequestDTO, ProjectTaskDTO } from './projects.dto'
 import { QueryPaginationDTO, PaginatedResponseDTO } from 'src/common/dtos/query-pagination.dto'
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils'
+import { RequestContextService } from 'src/common/services/request-context.service';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly requestContext: RequestContextService,
+  ) {}
 
-  async findAll(createdById: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<ProjectListItemDTO>> {
+  async canEdit(projectId: string): Promise<boolean> {
+    const collaborator = await this.prisma.projectCollaborator.findUnique({
+      where: {
+        userId_projectId: {
+          userId: this.requestContext.getUser().id,
+          projectId
+        }
+      }
+    }
+  );
 
-    const where = { createdById };
+    if(collaborator && ['EDITOR','OWNER'].includes(collaborator.ROLE)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  async findAll(query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<ProjectListItemDTO>> {
+
+    const where = { createdById: this.requestContext.getUser().id };
 
     const [projects, total] = await Promise.all([
       this.prisma.project.findMany({ ...paginate(query), where }),
@@ -34,7 +55,9 @@ export class ProjectsService {
     return project
   }
 
-  async create(userId: string, data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
+  async create(data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
+
+    const userId = this.requestContext.getUser().id;
     
     const newProject = await this.prisma.$transaction(async tx => {
 
@@ -48,7 +71,7 @@ export class ProjectsService {
       const collaborator = await tx.projectCollaborator.create({
         data: {
           projectId: project.id,
-          userId: userId,
+          userId,
           ROLE: 'OWNER'
         }
       });
@@ -60,10 +83,12 @@ export class ProjectsService {
   }
 
   async update(id: string, data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
-    const existingProject = await this.prisma.project.findFirst({ where: { id }})
+    await this.findById(id);
 
-    if (!existingProject) {
-      throw new NotFoundException('Projeto não encontrado')
+    const canEditProject = await this.canEdit(id);
+
+    if(!canEditProject){
+      throw new ForbiddenException();
     }
 
     const updatedProject = await this.prisma.project.update({ where: { id }, data })

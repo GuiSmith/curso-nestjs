@@ -4,6 +4,8 @@ import { CollaboratorCreateDTO, CollaboratorListItemDTO, CollaboratorUpdateDTO }
 import { CollaboratorsService } from './collaborators.service'
 import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator'
+import { AuthenticatedUser } from 'src/common/decorators/authenticated-user.decorator'
+import { AuthenticatedUserDTO } from '../users/users.dto'
 
 @Controller({
   version: '1',
@@ -57,7 +59,10 @@ export class CollaboratorsController {
 
   @Delete(':collaboratorId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('projectId', ParseUUIDPipe) projectId: string, @Param('collaboratorId', ParseUUIDPipe) collaboratorId: string) {
+  remove(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('collaboratorId', ParseUUIDPipe) collaboratorId: string
+  ) {
     return this.collaboratorsService.remove(projectId, collaboratorId)
   }
 }
