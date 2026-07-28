@@ -13,13 +13,8 @@ export class AuthService {
     constructor(
         private readonly userService: UsersService,
         private readonly jwtService: JwtService,
-        private readonly prismaService: PrismaService,
         private readonly mailService: MailService,
     ) {}
-
-    private async getHashedPassword(password: string): Promise<string> {
-        return await bcrypt.hash(password, 12);
-    }
 
     async signup(data: SignUpDTO): Promise<TokenResponseDTO> {
 

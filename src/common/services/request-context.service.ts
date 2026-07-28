@@ -1,4 +1,4 @@
-import { Inject, Injectable, Request, Scope } from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable, Request, Scope } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import type { User } from "@prisma/client";
 
@@ -9,7 +9,20 @@ export class RequestContextService {
 
     constructor(@Inject(REQUEST) private readonly request: AuthenticatedRequest) {}
 
-    getUser(): User | undefined {
-        return this.request.user;
+    getUser(): User {
+
+        const user = this.request.user;
+
+        if(!user){
+            throw new ForbiddenException();
+        }
+
+        return user;
+    }
+
+    isUserAdmin(): boolean {
+        const user = this.getUser();
+
+        return user.role === 'ADMIN';
     }
 }

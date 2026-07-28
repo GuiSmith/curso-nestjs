@@ -4,6 +4,7 @@ import { UserListFullItemDTO, UserRequestDTO } from './users.dto';
 import { ApiResponse } from '@nestjs/swagger';
 import { QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto';
 import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator';
+import { PublicRoute } from 'src/common/decorators/public-route.decorator';
 
 @Controller({
     version: '1',
@@ -31,6 +32,7 @@ export class UsersController {
     @ApiResponse({
         type: UserListFullItemDTO
     })
+    @PublicRoute()
     create(@Body() data: UserRequestDTO) {
         return this.userService.create(data);
     }

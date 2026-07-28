@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { UserListFullItemDTO, UserListItemDTO, UserRequestDTO } from './users.dto';
 import { User } from '@prisma/client';
@@ -6,11 +6,15 @@ import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils';
 import * as bcrypt from 'bcrypt';
 import { SignUpDTO } from '../auth/auth.dto';
+import { RequestContextService } from 'src/common/services/request-context.service';
 
 @Injectable()
 export class UsersService {
 
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly requestContextService: RequestContextService,
+    ) {}
 
     private select = {
         id: true,
@@ -41,6 +45,11 @@ export class UsersService {
     }
 
     async findById(id: string): Promise<UserListFullItemDTO> {
+
+        if(!this.requestContextService.isUserAdmin()){
+            throw new ForbiddenException();
+        }
+
         const user = await this.prisma.user.findFirst({
             where: { id },
             select: this.select
@@ -79,6 +88,10 @@ export class UsersService {
 
     async findAll(query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<UserListFullItemDTO>> {
 
+        if(!this.requestContextService.isUserAdmin()){
+            throw new ForbiddenException();
+        }
+
         const [users, total] = await Promise.all([
             this.prisma.user.findMany({ ...paginate(query), select: this.select }),
             this.prisma.user.count()
@@ -111,6 +124,10 @@ export class UsersService {
     }
 
     async update(id: string, data: UserRequestDTO): Promise<UserListFullItemDTO> {
+
+        if(this.requestContextService.getUser().id !== id){
+            throw new ForbiddenException();
+        }
 
         const user = await this.prisma.$transaction(async tx => {
             const existingUser = await tx.user.findFirst({ where: { id } });

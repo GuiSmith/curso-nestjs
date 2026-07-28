@@ -18,11 +18,6 @@ export class SignUpDTO {
     @IsNotEmpty()
     @MinLength(6)
     password: string
-
-    @ApiProperty({ description: 'User role', enum: Role, default: Role.ADMIN, required: false })
-    @IsEnum(Role)
-    @IsOptional()
-    role?: Role = Role.ADMIN
 }
 
 export class SignInDTO {

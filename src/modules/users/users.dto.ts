@@ -28,11 +28,6 @@ export class UserRequestDTO {
     @IsOptional()
     @IsString()
     avatar?: string
-
-    @ApiProperty({ description: 'User role', enum: Role, default: Role.ADMIN, required: false })
-    @IsEnum(Role)
-    @IsOptional()
-    role?: Role = Role.ADMIN
 }
 
 export class UserListItemDTO {
