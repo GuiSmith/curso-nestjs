@@ -13,10 +13,13 @@ export class ProjectsService {
   ) {}
 
   async canEdit(projectId: string): Promise<boolean> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
     const collaborator = await this.prisma.projectCollaborator.findUnique({
       where: {
         userId_projectId: {
-          userId: this.requestContext.getUser().id,
+          userId: currentAuthenticatedUser.id,
           projectId
         }
       }
@@ -32,7 +35,9 @@ export class ProjectsService {
 
   async findAll(query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<ProjectListItemDTO>> {
 
-    const where = { createdById: this.requestContext.getUser().id };
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const where = { createdById: currentAuthenticatedUser.id };
 
     const [projects, total] = await Promise.all([
       this.prisma.project.findMany({ ...paginate(query), where }),
@@ -57,7 +62,9 @@ export class ProjectsService {
 
   async create(data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
 
-    const userId = this.requestContext.getUser().id;
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const userId = currentAuthenticatedUser.id;
     
     const newProject = await this.prisma.$transaction(async tx => {
 
