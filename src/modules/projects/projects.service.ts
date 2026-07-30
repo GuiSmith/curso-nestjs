@@ -12,14 +12,12 @@ export class ProjectsService {
     private readonly requestContext: RequestContextService,
   ) {}
 
-  async canEdit(projectId: string): Promise<boolean> {
-
-    const currentAuthenticatedUser = this.requestContext.getUser();
+  async canEdit(projectId: string, userId: string): Promise<boolean> {
     
     const collaborator = await this.prisma.projectCollaborator.findUnique({
       where: {
         userId_projectId: {
-          userId: currentAuthenticatedUser.id,
+          userId,
           projectId
         }
       }
@@ -92,7 +90,9 @@ export class ProjectsService {
   async update(id: string, data: ProjectRequestDTO): Promise<ProjectListItemDTO> {
     await this.findById(id);
 
-    const canEditProject = await this.canEdit(id);
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const canEditProject = await this.canEdit(id, currentAuthenticatedUser.id);
 
     if(!canEditProject){
       throw new ForbiddenException();

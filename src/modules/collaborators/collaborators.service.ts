@@ -15,14 +15,9 @@ export class CollaboratorsService {
     private readonly requestContext: RequestContextService,
   ) {}
 
-  async isCollaborator(projectId: string): Promise<boolean> {
+  async isCollaborator(projectId: string, userId: string): Promise<boolean> {
     const collaborator = await this.prisma.projectCollaborator.findUnique({
-      where: {
-        userId_projectId: {
-          userId: this.requestContext.getUser().id, 
-          projectId
-        }
-      }
+      where: { userId_projectId: { userId, projectId } }
     }
   );
 
@@ -31,7 +26,9 @@ export class CollaboratorsService {
 
   async findAllByProject(projectId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<CollaboratorListItemDTO>> {
 
-    const isCollaborator = await this.isCollaborator(projectId);
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const isCollaborator = await this.isCollaborator(projectId, currentAuthenticatedUser.id);
 
     if(!isCollaborator){
       throw new ForbiddenException();
@@ -55,7 +52,9 @@ export class CollaboratorsService {
 
   async findById(projectId: string, id: string): Promise<CollaboratorListItemDTO> {
 
-    const isCollaborator = await this.isCollaborator(projectId);
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const isCollaborator = await this.isCollaborator(projectId, currentAuthenticatedUser.id);
 
     if(!isCollaborator){
       throw new ForbiddenException();
@@ -78,7 +77,9 @@ export class CollaboratorsService {
 
   async create(projectId: string, data: CollaboratorCreateDTO): Promise<CollaboratorListItemDTO> {
 
-    const canEditProject = await this.projectService.canEdit(projectId);
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const canEditProject = await this.projectService.canEdit(projectId, currentAuthenticatedUser.id);
 
     if(!canEditProject){
       throw new ForbiddenException();
@@ -118,7 +119,9 @@ export class CollaboratorsService {
 
   async update(projectId: string, collaboratorId: string, data: CollaboratorUpdateDTO): Promise<CollaboratorListItemDTO> {
 
-    const canEditProject = await this.projectService.canEdit(projectId);
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const canEditProject = await this.projectService.canEdit(projectId, currentAuthenticatedUser.id);
 
     if(!canEditProject){
       throw new ForbiddenException();
@@ -155,7 +158,9 @@ export class CollaboratorsService {
 
   async remove(projectId: string, id: string): Promise<CollaboratorListItemDTO> {
 
-    const canEditProject = await this.projectService.canEdit(projectId);
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const canEditProject = await this.projectService.canEdit(projectId, currentAuthenticatedUser.id);
 
     if(!canEditProject){
       throw new ForbiddenException();
