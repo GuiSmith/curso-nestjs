@@ -20,6 +20,12 @@ export class UsersController {
         return this.userService.findAll(query);
     }
 
+    @Get('me')
+    @ApiResponse({ type: UserListFullItemDTO })
+    me() {
+        return this.userService.me();
+    }
+
     @Get(':userId')
     @ApiResponse({
         type: UserListFullItemDTO

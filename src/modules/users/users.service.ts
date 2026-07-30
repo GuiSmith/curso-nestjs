@@ -30,6 +30,13 @@ export class UsersService {
         return await bcrypt.hash(password, 12);
     }
 
+    async me(): Promise<UserListFullItemDTO> {
+        const currentAuthenticatedUser = this.requestContextService.getUser();
+        const user = await this.findById(currentAuthenticatedUser.id);
+
+        return user;
+    }
+
     async updatePassword(email: string, password: string): Promise<UserListFullItemDTO> {
         await this.findByEmail(email);
         
