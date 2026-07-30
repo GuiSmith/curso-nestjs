@@ -1,20 +1,33 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { CommentFullDTO, CommentListItemDTO, CommentRequestDTO } from './comments.dto'
 import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils';
 import { CollaboratorsService } from '../collaborators/collaborators.service';
 import { RequestContextService } from 'src/common/services/request-context.service';
+import { COLLABORATOR_ROLE_EDITOR_KEY, COLLABORATOR_ROLE_VIEWER_KEY } from 'src/consts';
 
 @Injectable()
 export class CommentsService {
+
+  private readRole = COLLABORATOR_ROLE_VIEWER_KEY;
+  private writeRole = COLLABORATOR_ROLE_EDITOR_KEY;
+
   constructor(
     private readonly prisma: PrismaService,
-    private readonly collaboratorService: CollaboratorsService,
-    private readonly requestContextService: RequestContextService,
+    private readonly collaboratorsService: CollaboratorsService,
+    private readonly requestContext: RequestContextService,
   ) {}
 
   async findAllByTask(projectId: string, taskId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<CommentListItemDTO>> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.readRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
 
     const task = await this.prisma.task.findFirst({ where: { projectId, id: taskId }});
 
@@ -49,6 +62,15 @@ export class CommentsService {
   }
 
   async findById(projectId: string, taskId: string, commentId: string): Promise<CommentFullDTO> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.readRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
+
     const comment = await this.prisma.comment.findFirst({
       where: {
         id: commentId,
@@ -87,7 +109,16 @@ export class CommentsService {
     return comment
   }
 
-  async create(authorId: string, projectId: string, taskId: string, data: CommentRequestDTO): Promise<CommentListItemDTO> {
+  async create(projectId: string, taskId: string, data: CommentRequestDTO): Promise<CommentListItemDTO> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.writeRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
+
     const task = await this.prisma.task.findFirst({
       where: { id: taskId, projectId },
     })
@@ -100,7 +131,7 @@ export class CommentsService {
       data: {
         ...data,
         taskId,
-        authorId,
+        authorId: currentAuthenticatedUser.id,
       },
       select: {
         id: true,
@@ -122,7 +153,20 @@ export class CommentsService {
   }
 
   async update(projectId: string, taskId: string, commentId: string, data: CommentRequestDTO): Promise<CommentListItemDTO> {
-    await this.findById(projectId, taskId, commentId)
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.writeRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
+
+    const comment = await this.findById(projectId, taskId, commentId)
+
+    if(comment.authorId !== currentAuthenticatedUser.id){
+      throw new ForbiddenException();
+    }
 
     return this.prisma.comment.update({
       where: { id: commentId },
@@ -147,7 +191,20 @@ export class CommentsService {
   }
 
   async delete(projectId: string, taskId: string, commentId: string): Promise<CommentListItemDTO> {
-    await this.findById(projectId, taskId, commentId)
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.writeRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
+    
+    const comment = await this.findById(projectId, taskId, commentId);
+
+    if(comment.authorId !== currentAuthenticatedUser.id){
+      throw new ForbiddenException();
+    }
 
     return this.prisma.comment.delete({
       where: { id: commentId },

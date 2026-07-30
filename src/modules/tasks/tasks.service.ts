@@ -1,14 +1,33 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { TaskCommentDTO, TaskListItemDTO, TaskRequestDTO } from './task.dto';
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils';
 import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto';
+import { CollaboratorsService } from '../collaborators/collaborators.service';
+import { RequestContextService } from 'src/common/services/request-context.service';
+import { COLLABORATOR_ROLE_EDITOR_KEY, COLLABORATOR_ROLE_VIEWER_KEY } from 'src/consts';
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly prisma: PrismaService) {}
+
+  private readRole = COLLABORATOR_ROLE_VIEWER_KEY;
+  private writeRole = COLLABORATOR_ROLE_EDITOR_KEY;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly collaboratorsService: CollaboratorsService,
+    private readonly requestContext: RequestContextService,
+  ) {}
 
   async findAllByProject(projectId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<TaskListItemDTO>> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.readRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
     
     const where = { projectId };
 
@@ -26,6 +45,14 @@ export class TasksService {
   }
 
   async findById(projectId: string, taskId: string): Promise<TaskCommentDTO> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.readRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
     
     const task = await this.prisma.task.findFirst({
       where: {
@@ -56,6 +83,14 @@ export class TasksService {
   }
 
   async create(projectId: string, data: TaskRequestDTO): Promise<TaskListItemDTO> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.writeRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
     
     const project = await this.prisma.project.findFirst({ where: { id: projectId }});
 
@@ -80,6 +115,15 @@ export class TasksService {
   }
 
   async update(projectId: string, taskId: string, data: TaskRequestDTO): Promise<TaskListItemDTO> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+    
+    const hasPermission = await this.collaboratorsService.hasPermission(projectId, currentAuthenticatedUser.id, this.writeRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
+    
     const existingTask = await this.prisma.task.findFirst({
       where: {
         id: taskId,

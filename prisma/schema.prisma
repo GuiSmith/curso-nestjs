@@ -23,6 +23,7 @@ model Project {
 enum CollaboratorRole {
   VIEWER
   EDITOR
+  ADMIN
   OWNER
 }
 

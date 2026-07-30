@@ -4,38 +4,31 @@ import { ProjectListItemDTO, ProjectRequestDTO, ProjectTaskDTO } from './project
 import { QueryPaginationDTO, PaginatedResponseDTO } from 'src/common/dtos/query-pagination.dto'
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils'
 import { RequestContextService } from 'src/common/services/request-context.service';
+import { COLLABORATOR_ROLE_OWNER_KEY, COLLABORATOR_ROLE_VIEWER_KEY } from 'src/consts'
+import { CollaboratorsService } from '../collaborators/collaborators.service'
 
 @Injectable()
 export class ProjectsService {
+
+  private readRole = COLLABORATOR_ROLE_VIEWER_KEY;
+  private writeRole = COLLABORATOR_ROLE_OWNER_KEY;
+    
   constructor(
     private readonly prisma: PrismaService,
+    private readonly collaboratorsService: CollaboratorsService,
     private readonly requestContext: RequestContextService,
   ) {}
-
-  async canEdit(projectId: string, userId: string): Promise<boolean> {
-    
-    const collaborator = await this.prisma.projectCollaborator.findUnique({
-      where: {
-        userId_projectId: {
-          userId,
-          projectId
-        }
-      }
-    }
-  );
-
-    if(collaborator && ['EDITOR','OWNER'].includes(collaborator.ROLE)) {
-      return true;
-    }
-
-    return false;
-  }
 
   async findAll(query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<ProjectListItemDTO>> {
 
     const currentAuthenticatedUser = this.requestContext.getUser();
 
-    const where = { createdById: currentAuthenticatedUser.id };
+    const where = {
+      OR: [
+        { createdById: currentAuthenticatedUser.id },
+        { collaborators: { some: { userId: currentAuthenticatedUser.id }}}
+      ]
+    };
 
     const [projects, total] = await Promise.all([
       this.prisma.project.findMany({ ...paginate(query), where }),
@@ -46,6 +39,15 @@ export class ProjectsService {
   }
 
   async findById(id: string): Promise<ProjectTaskDTO> {
+
+    const currentAuthenticatedUser = this.requestContext.getUser();
+
+    const hasPermission = await this.collaboratorsService.hasPermission(id, currentAuthenticatedUser.id, this.readRole);
+
+    if(!hasPermission){
+      throw new ForbiddenException();
+    }
+
     const project = await this.prisma.project.findFirst({
       where: { id },
       include: { tasks: true }
@@ -92,9 +94,9 @@ export class ProjectsService {
 
     const currentAuthenticatedUser = this.requestContext.getUser();
 
-    const canEditProject = await this.canEdit(id, currentAuthenticatedUser.id);
+    const hasPermission = await this.collaboratorsService.hasPermission(id, currentAuthenticatedUser.id, this.writeRole);
 
-    if(!canEditProject){
+    if(!hasPermission){
       throw new ForbiddenException();
     }
 

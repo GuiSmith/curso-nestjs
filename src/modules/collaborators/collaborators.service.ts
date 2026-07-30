@@ -4,33 +4,49 @@ import { CollaboratorCreateDTO, CollaboratorListItemDTO, CollaboratorUpdateDTO }
 import { CollaboratorRole } from '@prisma/client'
 import { PaginatedResponseDTO, QueryPaginationDTO } from 'src/common/dtos/query-pagination.dto'
 import { paginate, paginateOutput } from 'src/common/utils/pagination.utils'
-import { ProjectsService } from '../projects/projects.service'
 import { RequestContextService } from 'src/common/services/request-context.service'
+import { COLLABORATOR_ROLE_ADMIN_KEY, COLLABORATOR_ROLE_VIEWER_KEY } from 'src/consts'
 
 @Injectable()
 export class CollaboratorsService {
+
+  private readonly roleValues: Record<CollaboratorRole, number> = {
+    VIEWER: 1,
+    EDITOR: 2,
+    ADMIN: 3,
+    OWNER: 4,
+  };
+
+  private readRole = COLLABORATOR_ROLE_VIEWER_KEY;
+  private writeRole = COLLABORATOR_ROLE_ADMIN_KEY;
+
   constructor(
     private readonly prisma: PrismaService,
-    private readonly projectService: ProjectsService,
     private readonly requestContext: RequestContextService,
   ) {}
 
-  async isCollaborator(projectId: string, userId: string): Promise<boolean> {
+  async hasPermission (projectId: string, userId: string, role: CollaboratorRole): Promise<boolean> {
+    
     const collaborator = await this.prisma.projectCollaborator.findUnique({
       where: { userId_projectId: { userId, projectId } }
-    }
-  );
+    });
 
-    return Boolean(collaborator);
+    if(!collaborator){
+      return false;
+    }
+
+    const roleValue = this.roleValues[collaborator.ROLE];
+
+    return roleValue >= this.roleValues[role];
   }
 
   async findAllByProject(projectId: string, query?: QueryPaginationDTO): Promise<PaginatedResponseDTO<CollaboratorListItemDTO>> {
 
     const currentAuthenticatedUser = this.requestContext.getUser();
 
-    const isCollaborator = await this.isCollaborator(projectId, currentAuthenticatedUser.id);
+    const hasPermission = await this.hasPermission(projectId, currentAuthenticatedUser.id, this.readRole);
 
-    if(!isCollaborator){
+    if(!hasPermission){
       throw new ForbiddenException();
     }
 
@@ -54,9 +70,9 @@ export class CollaboratorsService {
 
     const currentAuthenticatedUser = this.requestContext.getUser();
 
-    const isCollaborator = await this.isCollaborator(projectId, currentAuthenticatedUser.id);
+    const hasPermission = await this.hasPermission(projectId, currentAuthenticatedUser.id, this.readRole);
 
-    if(!isCollaborator){
+    if(!hasPermission){
       throw new ForbiddenException();
     }
 
@@ -79,9 +95,9 @@ export class CollaboratorsService {
 
     const currentAuthenticatedUser = this.requestContext.getUser();
 
-    const canEditProject = await this.projectService.canEdit(projectId, currentAuthenticatedUser.id);
+    const hasPermission = await this.hasPermission(projectId, currentAuthenticatedUser.id, this.writeRole);
 
-    if(!canEditProject){
+    if(!hasPermission){
       throw new ForbiddenException();
     }
 
@@ -121,9 +137,9 @@ export class CollaboratorsService {
 
     const currentAuthenticatedUser = this.requestContext.getUser();
 
-    const canEditProject = await this.projectService.canEdit(projectId, currentAuthenticatedUser.id);
+    const hasPermission = await this.hasPermission(projectId, currentAuthenticatedUser.id, this.writeRole);
 
-    if(!canEditProject){
+    if(!hasPermission){
       throw new ForbiddenException();
     }
 
@@ -160,9 +176,9 @@ export class CollaboratorsService {
 
     const currentAuthenticatedUser = this.requestContext.getUser();
 
-    const canEditProject = await this.projectService.canEdit(projectId, currentAuthenticatedUser.id);
+    const hasPermission = await this.hasPermission(projectId, currentAuthenticatedUser.id, this.writeRole);
 
-    if(!canEditProject){
+    if(!hasPermission){
       throw new ForbiddenException();
     }
 
@@ -185,7 +201,7 @@ export class CollaboratorsService {
     })
 
     const { ROLE: role, user, ...collaboratorData } = collaborator
-    const { password: _, role: _userRole, ...safeUser } = user
+    const { password: __, role: _userRole, ...safeUser } = user
 
     return { ...collaboratorData, role, user: safeUser }
   }

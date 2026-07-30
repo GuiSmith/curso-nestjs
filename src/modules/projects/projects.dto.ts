@@ -14,7 +14,7 @@ export class ProjectRequestDTO {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  description?: string | null
+  description?: string
 }
 
 export class ProjectListItemDTO {
